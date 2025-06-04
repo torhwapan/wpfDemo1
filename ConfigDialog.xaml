@@ -1,0 +1,137 @@
+<Window x:Class="ConfigurationManager.ConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ConfigurationManager"
+        Title="配置详情" Height="500" Width="800"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStyle="ToolWindow">
+    <Window.Resources>
+        <local:VisibilityToBooleanConverter x:Key="VisibilityToBooleanConverter"/>
+        <Style x:Key="DisabledTextBoxStyle" TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#FFE6E6E6"/>
+                    <Setter Property="Foreground" Value="#FF666666"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 主要内容区域 -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- 厂别备注 -->
+                <GroupBox Header="厂别备注" Margin="0,0,0,10">
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="factory !=All Reason" VerticalAlignment="Center"/>
+                            <TextBlock Text="*" Foreground="Red" Margin="2,0,0,0" 
+                                     x:Name="txtFactoryNoteRequired" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <TextBox x:Name="txtFactoryNote" Grid.Column="1" Height="25" Margin="0,5"
+                                TextChanged="TxtFactoryNote_TextChanged"
+                                Style="{StaticResource DisabledTextBoxStyle}"
+                                IsEnabled="{Binding ElementName=txtFactoryNoteRequired, Path=Visibility, 
+                                          Converter={StaticResource VisibilityToBooleanConverter}}"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- DB配置 -->
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <DockPanel>
+                            <TextBlock Text="DB配置"/>
+                        </DockPanel>
+                    </GroupBox.Header>
+                    <StackPanel Margin="5">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Text="是否关联DB配置：" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,5">
+                                <RadioButton x:Name="rbNeedDbYes" Content="是" Margin="0,0,20,0" 
+                                           Checked="RbNeedDb_Changed"/>
+                                <RadioButton x:Name="rbNeedDbNo" Content="否" IsChecked="True"
+                                           Checked="RbNeedDb_Changed"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 不关联DB配置时的理由输入 -->
+                        <Grid x:Name="pnlNoDbReason" Visibility="Visible" Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="不关联原因" VerticalAlignment="Center"/>
+                                <TextBlock Text="*" Foreground="Red" Margin="2,0,0,0"/>
+                            </StackPanel>
+                            <TextBox x:Name="txtNoDbReason" Grid.Column="1" Height="25"
+                                   TextChanged="TxtNoDbReason_TextChanged"/>
+                        </Grid>
+
+                        <!-- 关联DB配置时的选项 -->
+                        <StackPanel x:Name="pnlDbConfig" Visibility="Collapsed" Margin="0,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Text="是否已上线：" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,5">
+                                    <RadioButton x:Name="rbIsOnlineYes" Content="是" Margin="0,0,20,0"
+                                               Checked="RbIsOnline_Changed"/>
+                                    <RadioButton x:Name="rbIsOnlineNo" Content="否" IsChecked="True"
+                                               Checked="RbIsOnline_Changed"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- DB配置选择 -->
+                            <Grid x:Name="pnlDbSelection" Visibility="Collapsed" Margin="0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <DockPanel>
+                                    <TextBlock Text="DB配置选择" VerticalAlignment="Center"/>
+                                    <TextBlock Text="*" Foreground="Red" Margin="0,-5,0,0" 
+                                             VerticalAlignment="Top"/>
+                                </DockPanel>
+                                <ComboBox x:Name="cmbDbConfigs" Grid.Column="1" Height="25"
+                                        SelectionChanged="CmbDbConfigs_SelectionChanged"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 底部按钮区域 -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="btnOk" Content="确认" Width="80" Height="30" Margin="0,0,10,0" 
+                    Click="BtnOk_Click" IsEnabled="False"/>
+            <Button x:Name="btnCancel" Content="取消" Width="80" Height="30" Click="BtnCancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window> 
