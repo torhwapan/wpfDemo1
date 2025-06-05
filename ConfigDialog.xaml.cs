@@ -1,23 +1,99 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.ComponentModel;
 
 namespace ConfigurationManager
 {
-    public partial class ConfigDialog : Window
+    public partial class ConfigDialog : Window, INotifyPropertyChanged
     {
         private string _selectedFactory = "A";
+        private string _selectedDB = "MESDB";
         private bool _isFactoryNoteRequired;
+        private bool _isDbConfigRequired;
+        private bool _isNoDbReasonRequired;
+        private bool _isOnlineStatusRequired;
+        private bool _isDbSelectionRequired;
         private bool _isInitialized = false;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public bool IsFactoryNoteRequired
+        {
+            get => _isFactoryNoteRequired;
+            private set
+            {
+                if (_isFactoryNoteRequired != value)
+                {
+                    _isFactoryNoteRequired = value;
+                    OnPropertyChanged(nameof(IsFactoryNoteRequired));
+                }
+            }
+        }
+
+        public bool IsDbConfigRequired
+        {
+            get => _isDbConfigRequired;
+            private set
+            {
+                if (_isDbConfigRequired != value)
+                {
+                    _isDbConfigRequired = value;
+                    OnPropertyChanged(nameof(IsDbConfigRequired));
+                    UpdateRequiredFields();
+                }
+            }
+        }
+
+        public bool IsNoDbReasonRequired
+        {
+            get => _isNoDbReasonRequired;
+            private set
+            {
+                if (_isNoDbReasonRequired != value)
+                {
+                    _isNoDbReasonRequired = value;
+                    OnPropertyChanged(nameof(IsNoDbReasonRequired));
+                }
+            }
+        }
+
+        public bool IsOnlineStatusRequired
+        {
+            get => _isOnlineStatusRequired;
+            private set
+            {
+                if (_isOnlineStatusRequired != value)
+                {
+                    _isOnlineStatusRequired = value;
+                    OnPropertyChanged(nameof(IsOnlineStatusRequired));
+                }
+            }
+        }
+
+        public bool IsDbSelectionRequired
+        {
+            get => _isDbSelectionRequired;
+            private set
+            {
+                if (_isDbSelectionRequired != value)
+                {
+                    _isDbSelectionRequired = value;
+                    OnPropertyChanged(nameof(IsDbSelectionRequired));
+                }
+            }
+        }
 
         public ConfigDialog()
         {
             try
             {
                 InitializeComponent();
-                
-                // 初始化控件状态
                 InitializeControls();
-                
                 _isInitialized = true;
                 ValidateInputs();
             }
@@ -49,42 +125,6 @@ namespace ConfigurationManager
             UpdatePanelVisibility();
         }
 
-        private void UpdatePanelVisibility()
-        {
-            if (pnlNoDbReason != null && pnlDbConfig != null && pnlDbSelection != null)
-            {
-                // 根据是否关联DB配置设置面板可见性
-                bool isNeedDb = rbNeedDbYes?.IsChecked == true;
-                pnlNoDbReason.Visibility = !isNeedDb ? Visibility.Visible : Visibility.Collapsed;
-                pnlDbConfig.Visibility = isNeedDb ? Visibility.Visible : Visibility.Collapsed;
-
-                // 根据是否已上线设置DB选择面板可见性
-                if (isNeedDb)
-                {
-                    pnlDbSelection.Visibility = rbIsOnlineYes?.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-                }
-                else
-                {
-                    pnlDbSelection.Visibility = Visibility.Collapsed;
-                }
-            }
-        }
-
-        public void SetFactorySelection(string factory)
-        {
-            if (string.IsNullOrEmpty(factory)) return;
-            
-            _selectedFactory = factory;
-            _isFactoryNoteRequired = factory != "ALL";
-            
-            if (txtFactoryNoteRequired != null)
-            {
-                txtFactoryNoteRequired.Visibility = _isFactoryNoteRequired ? Visibility.Visible : Visibility.Collapsed;
-            }
-            
-            ValidateInputs();
-        }
-
         private void InitializeDbConfigs()
         {
             if (cmbDbConfigs != null)
@@ -96,12 +136,140 @@ namespace ConfigurationManager
             }
         }
 
+        public void SetFactorySelection(string factory)
+        {
+            if (string.IsNullOrEmpty(factory)) return;
+            
+            _selectedFactory = factory;
+            IsFactoryNoteRequired = factory != "ALL";
+            
+            // 当Factory=ALL时，禁用Factory备注输入
+            if (txtFactoryNote != null)
+            {
+                txtFactoryNote.IsEnabled = factory != "ALL";
+                txtFactoryNote.Text = factory == "ALL" ? "" : txtFactoryNote.Text;
+            }
+            
+            ValidateInputs();
+        }
+
+        public void SetDBSelection(string db)
+        {
+            if (string.IsNullOrEmpty(db)) return;
+            
+            _selectedDB = db;
+            IsDbConfigRequired = db != "NULL";
+            
+            // 当DB=NULL时，重置并禁用所有DB相关控件
+            if (!IsDbConfigRequired)
+            {
+                if (rbNeedDbNo != null && rbNeedDbYes != null)
+                {
+                    rbNeedDbNo.IsChecked = false;
+                    rbNeedDbYes.IsChecked = false;
+                    rbNeedDbNo.IsEnabled = false;
+                    rbNeedDbYes.IsEnabled = false;
+                }
+                
+                if (rbIsOnlineNo != null && rbIsOnlineYes != null)
+                {
+                    rbIsOnlineNo.IsChecked = false;
+                    rbIsOnlineYes.IsChecked = false;
+                }
+                
+                if (txtNoDbReason != null)
+                {
+                    txtNoDbReason.Text = "";
+                }
+
+                IsNoDbReasonRequired = false;
+                IsOnlineStatusRequired = false;
+                IsDbSelectionRequired = false;
+            }
+            else
+            {
+                // 启用所有DB配置相关控件
+                if (rbNeedDbNo != null && rbNeedDbYes != null)
+                {
+                    rbNeedDbNo.IsEnabled = true;
+                    rbNeedDbYes.IsEnabled = true;
+                    rbNeedDbNo.IsChecked = true; // 默认选择"否"
+                }
+
+                UpdateRequiredFields();
+            }
+            
+            UpdatePanelVisibility();
+            ValidateInputs();
+        }
+
+        private void UpdateRequiredFields()
+        {
+            // 重置所有状态
+            IsNoDbReasonRequired = false;
+            IsOnlineStatusRequired = false;
+            IsDbSelectionRequired = false;
+
+            // 如果DB不为NULL，则"是否关联DB配置"为必填
+            if (IsDbConfigRequired)
+            {
+                bool isNeedDb = rbNeedDbYes?.IsChecked == true;
+                
+                if (isNeedDb)
+                {
+                    // 选择"是"时，"是否已上线"为必填
+                    IsOnlineStatusRequired = true;
+                    
+                    // 如果"是否已上线"选择"是"，则"DB配置选择"为必填
+                    if (rbIsOnlineYes?.IsChecked == true)
+                    {
+                        IsDbSelectionRequired = true;
+                    }
+                }
+                else
+                {
+                    // 选择"否"时，"不关联原因"为必填
+                    IsNoDbReasonRequired = true;
+                }
+            }
+        }
+
+        private void UpdatePanelVisibility()
+        {
+            if (pnlNoDbReason != null && pnlDbConfig != null && pnlDbSelection != null)
+            {
+                // 如果DB为NULL，隐藏所有DB相关面板
+                if (!IsDbConfigRequired)
+                {
+                    pnlNoDbReason.Visibility = Visibility.Collapsed;
+                    pnlDbConfig.Visibility = Visibility.Collapsed;
+                    pnlDbSelection.Visibility = Visibility.Collapsed;
+                    return;
+                }
+
+                // 正常的DB配置逻辑
+                bool isNeedDb = rbNeedDbYes?.IsChecked == true;
+                pnlNoDbReason.Visibility = !isNeedDb ? Visibility.Visible : Visibility.Collapsed;
+                pnlDbConfig.Visibility = isNeedDb ? Visibility.Visible : Visibility.Collapsed;
+
+                if (isNeedDb)
+                {
+                    pnlDbSelection.Visibility = rbIsOnlineYes?.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                }
+                else
+                {
+                    pnlDbSelection.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
         private void RbNeedDb_Changed(object sender, RoutedEventArgs e)
         {
             if (!_isInitialized) return;
             
             try
             {
+                UpdateRequiredFields();
                 UpdatePanelVisibility();
                 ValidateInputs();
             }
@@ -117,6 +285,7 @@ namespace ConfigurationManager
             
             try
             {
+                UpdateRequiredFields();
                 UpdatePanelVisibility();
                 ValidateInputs();
             }
@@ -153,19 +322,22 @@ namespace ConfigurationManager
                 bool isValid = true;
 
                 // 验证Factory备注
-                if (_isFactoryNoteRequired && string.IsNullOrWhiteSpace(txtFactoryNote?.Text))
+                if (IsFactoryNoteRequired && string.IsNullOrWhiteSpace(txtFactoryNote?.Text))
                 {
                     isValid = false;
                 }
 
-                // 验证DB配置
-                if (rbNeedDbNo?.IsChecked == true && string.IsNullOrWhiteSpace(txtNoDbReason?.Text))
+                // 只有在DB配置必填时才验证相关字段
+                if (IsDbConfigRequired)
                 {
-                    isValid = false;
-                }
-                else if (rbNeedDbYes?.IsChecked == true && rbIsOnlineYes?.IsChecked == true && cmbDbConfigs?.SelectedItem == null)
-                {
-                    isValid = false;
+                    if (rbNeedDbNo?.IsChecked == true && string.IsNullOrWhiteSpace(txtNoDbReason?.Text))
+                    {
+                        isValid = false;
+                    }
+                    else if (rbNeedDbYes?.IsChecked == true && rbIsOnlineYes?.IsChecked == true && cmbDbConfigs?.SelectedItem == null)
+                    {
+                        isValid = false;
+                    }
                 }
 
                 btnOk.IsEnabled = isValid;

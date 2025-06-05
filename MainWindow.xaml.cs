@@ -8,39 +8,55 @@ namespace ConfigurationManager;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private ConfigDialog _configDialog;
+
     public MainWindow()
     {
         InitializeComponent();
-        cmbFactory.SelectedIndex = 0; // 默认选择第一项
+        InitializeControls();
     }
 
-    private void CmbFactory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void InitializeControls()
     {
-        // 空实现，保持事件处理器存在
+        // 初始化Factory下拉框
+        cmbFactory.Items.Clear();
+        cmbFactory.Items.Add("A");
+        cmbFactory.Items.Add("B");
+        cmbFactory.Items.Add("ALL");
+        cmbFactory.SelectedIndex = 0;
+
+        // 初始化DB下拉框
+        cmbDB.Items.Clear();
+        cmbDB.Items.Add("MESDB");
+        cmbDB.Items.Add("GUYUDB");
+        cmbDB.Items.Add("NULL");
+        cmbDB.SelectedIndex = 0;
     }
 
-    private void BtnConfirm_Click(object sender, RoutedEventArgs e)
+    private void BtnConfig_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var configDialog = new ConfigDialog();
-            configDialog.Owner = this;
+            _configDialog = new ConfigDialog();
+            string selectedFactory = cmbFactory.SelectedItem?.ToString() ?? "A";
+            string selectedDB = cmbDB.SelectedItem?.ToString() ?? "NULL";
             
-            var selectedItem = cmbFactory.SelectedItem as ComboBoxItem;
-            if (selectedItem != null)
-            {
-                configDialog.SetFactorySelection(selectedItem.Content.ToString());
-            }
+            _configDialog.SetDBSelection(selectedDB); // 先设置DB，因为它会影响控件状态
+            _configDialog.SetFactorySelection(selectedFactory);
             
-            var result = configDialog.ShowDialog();
-            if (result == true)
+            if (_configDialog.ShowDialog() == true)
             {
                 MessageBox.Show("配置已保存", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         catch (System.Exception ex)
         {
-            MessageBox.Show($"发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"打开配置窗口错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void CmbFactory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Factory选择变更的处理逻辑
     }
 }
