@@ -1,11 +1,18 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.ComponentModel;
+using ConfigurationManager.Services;
+using System.Collections.Generic;
+using System.Windows.Data;
+using System.Windows.Threading;
+using System;
 
 namespace ConfigurationManager
 {
     public partial class ConfigDialog : Window, INotifyPropertyChanged
     {
+        private readonly DbConfigService _dbConfigService;
+        private List<DbConfig> _allDbConfigs;
         private string _selectedFactory = "A";
         private string _selectedDB = "MESDB";
         private bool _isFactoryNoteRequired;
@@ -92,6 +99,7 @@ namespace ConfigurationManager
         {
             try
             {
+                _dbConfigService = new DbConfigService();
                 InitializeComponent();
                 InitializeControls();
                 _isInitialized = true;
@@ -129,10 +137,39 @@ namespace ConfigurationManager
         {
             if (cmbDbConfigs != null)
             {
-                cmbDbConfigs.Items.Clear();
-                cmbDbConfigs.Items.Add("配置1");
-                cmbDbConfigs.Items.Add("配置2");
-                cmbDbConfigs.Items.Add("配置3");
+                _allDbConfigs = _dbConfigService.GetDbConfigurations();
+                cmbDbConfigs.ItemsSource = _allDbConfigs;
+                
+                // 设置过滤器
+                var view = CollectionViewSource.GetDefaultView(cmbDbConfigs.ItemsSource);
+                view.Filter = item => FilterDbConfig(item as DbConfig);
+                
+                // 添加文本变更事件处理
+                cmbDbConfigs.AddHandler(TextBox.TextChangedEvent, 
+                    new TextChangedEventHandler(CmbDbConfigs_TextChanged));
+            }
+        }
+
+        private bool FilterDbConfig(DbConfig item)
+        {
+            if (item == null) return false;
+            if (string.IsNullOrEmpty(cmbDbConfigs.Text)) return true;
+
+            return item.Name.Contains(cmbDbConfigs.Text, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void CmbDbConfigs_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+            {
+                var view = CollectionViewSource.GetDefaultView(comboBox.ItemsSource);
+                view.Refresh();
+                
+                // 如果有文本且下拉框未打开，则打开它
+                if (!string.IsNullOrEmpty(comboBox.Text) && !comboBox.IsDropDownOpen)
+                {
+                    comboBox.IsDropDownOpen = true;
+                }
             }
         }
 

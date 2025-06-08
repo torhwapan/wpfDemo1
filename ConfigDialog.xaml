@@ -170,10 +170,25 @@
                                 <TextBlock Text="DB配置选择" 
                                          Style="{StaticResource RequiredTextBlockStyle}"
                                          Tag="{Binding IsDbSelectionRequired, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
+
+                                <!-- DB配置下拉框 -->
                                 <ComboBox x:Name="cmbDbConfigs" 
                                         Grid.Column="1"
                                         Style="{StaticResource StandardComboBoxStyle}"
-                                        SelectionChanged="CmbDbConfigs_SelectionChanged"/>
+                                        SelectionChanged="CmbDbConfigs_SelectionChanged"
+                                        IsEditable="True"
+                                        IsTextSearchEnabled="True"
+                                        TextSearch.TextPath="Name"
+                                        StaysOpenOnEdit="True"
+                                        MaxDropDownHeight="300"
+                                        VirtualizingStackPanel.IsVirtualizing="True"
+                                        VirtualizingStackPanel.VirtualizationMode="Recycling">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </Grid>
                         </StackPanel>
                     </StackPanel>
