@@ -38,6 +38,18 @@
         <Style x:Key="StandardComboBoxStyle" TargetType="ComboBox">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="Height" Value="35"/>
+            <Setter Property="IsEditable" Value="True"/>
+            <Setter Property="IsTextSearchEnabled" Value="True"/>
+            <Setter Property="TextSearch.TextPath" Value="Name"/>
+            <Setter Property="StaysOpenOnEdit" Value="True"/>
+            <Setter Property="MaxDropDownHeight" Value="300"/>
+            <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"/>
+            <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"/>
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="IsDropDownOpen" Value="True"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <Style x:Key="StandardRadioButtonStyle" TargetType="RadioButton">
             <Setter Property="FontSize" Value="20"/>
@@ -176,6 +188,7 @@
                                         Grid.Column="1"
                                         Style="{StaticResource StandardComboBoxStyle}"
                                         SelectionChanged="CmbDbConfigs_SelectionChanged"
+                                        PreviewMouseLeftButtonDown="CmbDbConfigs_PreviewMouseLeftButtonDown"
                                         IsEditable="True"
                                         IsTextSearchEnabled="True"
                                         TextSearch.TextPath="Name"

@@ -350,6 +350,25 @@ namespace ConfigurationManager
             ValidateInputs();
         }
 
+        private void CmbDbConfigs_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+            {
+                if (!comboBox.IsDropDownOpen)
+                {
+                    e.Handled = true;
+                    comboBox.IsDropDownOpen = true;
+
+                    // 确保显示所有项目
+                    var view = CollectionViewSource.GetDefaultView(comboBox.ItemsSource);
+                    if (view != null)
+                    {
+                        view.Refresh();
+                    }
+                }
+            }
+        }
+
         private void ValidateInputs()
         {
             if (!_isInitialized || btnOk == null) return;
